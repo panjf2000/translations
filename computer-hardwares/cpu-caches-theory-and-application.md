@@ -322,7 +322,7 @@ BenchmarkStructureFalseSharing         514    2641990 ns/op
 BenchmarkStructurePadding              735    1622886 ns/op
 ```
 
-使用了内存填充之后的第二个例子要比最初的那个快乐差不多 40% 🎉，虽然不是没有代价的。内存填充的确能加快执行时间，不过代价是会导致更多的内存分配和浪费。
+使用了内存填充之后的第二个例子要比最初的那个快了差不多 40% 🎉，虽然不是没有代价的。内存填充的确能加快执行时间，不过代价是会导致更多的内存分配和浪费。
 
 ![](https://miro.medium.com/max/384/1*12f7EEkeVnNHyyBFYj5rGQ.png)
 
