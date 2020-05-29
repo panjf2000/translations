@@ -328,7 +328,7 @@ BenchmarkStructurePadding              735    1622886 ns/op
 
 机械同感 (Mechanical Sympathy) 在程序优化方面是一个重要的概念。在这篇文章中，我们已经通过相关的例子展示了对 CPU 处理器的了解是如何帮助我们优化/降低程序执行时间的。
 
-这里我要感谢[*Inanc Gumus*](https://medium.com/u/639ff3cb594a?source=post_page-----af5d32cc5592----------------------)和[*Val Deleplace*](https://medium.com/u/5c7fb9360a28?source=post_page-----af5d32cc5592----------------------)，正是因为和他们二位在 Twitter 上进行了一番有趣的探讨之后，才让我萌生了写这篇博客的想法。你们也应该去看看他们写的博客，因为他们输出了很多优质的内容。
+这里我要感谢 [*Inanc Gumus*](https://medium.com/u/639ff3cb594a?source=post_page-----af5d32cc5592----------------------) 和 [*Val Deleplace*](https://medium.com/u/5c7fb9360a28?source=post_page-----af5d32cc5592----------------------)，正是因为和他们二位在 Twitter 上进行了一番有趣的探讨之后，才让我萌生了写这篇博客的想法。你们也应该去看看他们写的博客，因为他们输出了很多优质的内容。
 
 ## 延伸阅读
 
