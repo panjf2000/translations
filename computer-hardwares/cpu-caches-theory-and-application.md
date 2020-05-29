@@ -311,7 +311,7 @@ func BenchmarkStructurePadding(b *testing.B) {
 }
 ```
 
-内存智能化，这个例子里的内存分布应该看起来像下图这样，两个变量之前有足够多的内存填充，从而导致它们最后只会分别存在于不同核心的缓存行上：
+内存智能化，这个例子里的内存分布应该看起来像下图这样，两个变量之间留有足够多的内存填充，从而导致它们最后只会分别存在于不同核心的缓存行上：
 
 ![](https://miro.medium.com/max/1400/1*BWJnFosKgD_fYqKnfNHCuw.png)
 
