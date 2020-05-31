@@ -189,7 +189,7 @@ BenchmarkMatrixReversedCombinationPerBlock-64000  6  185375690 ns/op
 
 如果第一个线程更新了它所在 CPU 的缓存行会发生什么？这更新操作可能会更新任何包含 `var2` 的缓存行。接着，当第二个线程尝试去读 `var2` 的时候，它的值可能已经和之前不一致了。
 
-处理器是如何保持缓存的一致性的？如果两个缓存行共享了一些内存地址，处理器将会把他们标记成 `Shared` 状态。如果一个线程修改了其中一个 `Shared` 状态的缓存行，那么两个缓存行都会被标记成 `Modified`。为了保证缓存一致性，需要引入在多核之间引入一种协调机制，而这种机制可能会导致应用程序的性能大幅度下降。这个问题就被成为**伪共享 (Fasle Sharing)**。
+处理器是如何保持缓存的一致性的？如果两个缓存行共享了一些内存地址，处理器将会把他们标记成 `Shared` 状态。如果一个线程修改了其中一个 `Shared` 状态的缓存行，那么两个缓存行都会被标记成 `Modified`。为了保证缓存一致性，需要引入在多核之间引入一种协调机制，而这种机制可能会导致应用程序的性能大幅度下降。这重问题就是**伪共享 (Fasle Sharing)**。
 
 我们来看一个具体的 Go 程序。在这个例子里，我们相继地实例化了两个结构体，一个紧挨着另一个；因此，这两个结构体应该会被分配在一片连续的内存上；然后，我们再创建两个 goroutines，分别去访问对应的结构体 (变量 M 的值等于 100 万)：
 
@@ -293,7 +293,19 @@ BenchmarkStructurePadding              735    1622886 ns/op
 
 这里我要感谢 [*Inanc Gumus*](https://medium.com/u/639ff3cb594a?source=post_page-----af5d32cc5592----------------------) 和 [*Val Deleplace*](https://medium.com/u/5c7fb9360a28?source=post_page-----af5d32cc5592----------------------)，正是因为和他们二位在 Twitter 上进行了一番有趣的探讨之后，才让我萌生了写这篇博客的想法。你们也应该去看看他们写的博客，因为他们输出了很多优质的内容。
 
-## 关于 Fasle Sharing 的进一步理解
+## 延伸阅读
+
+[go-cpu-caches](https://github.com/teivah/go-cpu-caches/)
+
+[Numbers Every Programmer Should Know By Year](https://colin-scott.github.io/personal_website/research/interactive_latency.html)
+
+[False Sharing](https://mechanical-sympathy.blogspot.com/2011/07/false-sharing.html)
+
+[Loop Optimizations Where Blocks are Required](https://software.intel.com/content/www/us/en/develop/articles/loop-optimizations-where-blocks-are-required.html)
+
+[从Java视角理解伪共享(False Sharing)](http://jm.taobao.org/2013/10/30/1719/)
+
+## 关于 Fasle Sharing 的补充
 
 **由于本文关于 False Sharing 那一章节对于该知识点的阐述过于简略以及分析不够准确，所以在这里译者补充一下我个人对 False Sharing 的分析**。
 
@@ -339,18 +351,6 @@ I（无效，Invalid）：缓存行失效, 不能使用。
 上图中 `thread1` 位于 `core1` ，而 `thread2` 位于 `core2` ，二者均想更新彼此独立的两个变量，但是由于两个变量位于不同核心中的同一个 L1 缓存行中，此时可知的是两个缓存行的状态应该都是 `Shared` ，而对于同一个缓存行的操作，不同的 `core` 间必须通过发送 RFO 消息来争夺所有权 `(ownership)` ，如果 `core1` 抢到了， `thread1` 因此去更新该缓存行，把状态变成 `Modified` ，那就会导致 `core2` 中对应的缓存行失效变成 `Invalid` ，当 `thread2` 取得所有权之后再去更新该缓存行时必须先让 `core1` 把对应的缓存行刷回 L3 缓存/主存，然后它再从 L3 缓存/主存中加载该缓存行进 L1 之后才能进行修改。然而，这个过程又会导致 `core1` 对应的缓存行失效变成 `Invalid` ，这个过程将会一直循环发生，从而导致 L1 高速缓存并未起到应有的作用，反而会降低性能；轮番夺取拥有权不但带来大量的 RFO 消息，而且如果某个线程需要读此行数据时，L1 和 L2 缓存上都是失效数据，只有 L3 缓存上是同步好的数据，而从前面的内容可以知道，L3 的读取速度相比 L1/L2 要慢了数十倍，性能下降很大；更坏的情况是跨槽读取，L3 都不能命中，只能从主存上加载，那就更慢了。
 
 **请记住，CPU 缓存的最小的处理单位永远是缓存行 (Cache Line)，所以当某个核心发送 RFO 消息请求把其他核心对应的缓存行设置成 `Invalid` 从而使得 `var1` 缓存失效的同时，也会导致同在一个缓存行里的 `var2` 失效，反之亦然。**
-
-## 延伸阅读
-
-[go-cpu-caches](https://github.com/teivah/go-cpu-caches/)
-
-[Numbers Every Programmer Should Know By Year](https://colin-scott.github.io/personal_website/research/interactive_latency.html)
-
-[False Sharing](https://mechanical-sympathy.blogspot.com/2011/07/false-sharing.html)
-
-[Loop Optimizations Where Blocks are Required](https://software.intel.com/content/www/us/en/develop/articles/loop-optimizations-where-blocks-are-required.html)
-
-[从Java视角理解伪共享(False Sharing)](http://jm.taobao.org/2013/10/30/1719/)
 
 ## Medium 英文原文
 
